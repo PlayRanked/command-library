@@ -16,11 +16,7 @@ class CommandExecution(val command: CommandBuilder, val executor: CommandExecuto
         return translated.translatedArguments[argument] as T
     }
 
-    fun <T> getOptionalArg(argument: String, default: String): T {
-        return translated.translatedArguments[argument] as T
-    }
-
     fun <T> getOptionalArg(argument: String, default: T): T {
-        return translated.translatedArguments[argument] as T
+        return getOptionalArg<T>(argument) ?: default
     }
 }

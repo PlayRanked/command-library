@@ -8,6 +8,7 @@ import net.playranked.library.command.executor.CommandExecutor
 class ArgumentTranslator(val executor: CommandExecutor, playerArgs: List<String>, private val argumentHandlers: MutableMap<String, ArgumentHandler>) {
 
     val translatedArguments = HashMap<String, Any?>()
+    private val requiredArguments = argumentHandlers.filterNot { !it.value.isOptional() }.count()
 
     init {
         val argumentList = argumentHandlers.entries.toList()
@@ -66,7 +67,19 @@ class ArgumentTranslator(val executor: CommandExecutor, playerArgs: List<String>
         }
     }
 
+    fun validateArguments(): Boolean {
+        return !translatedArguments.any {
+            val handler = argumentHandlers[it.key]
+
+            if (handler !is ArgumentBuilder<*>) {
+                return@any false
+            }
+
+            return@any !handler.runValidation(executor, it.value)
+        }
+    }
+
     fun canExecute(): Boolean {
-        return argumentHandlers.size == translatedArguments.size
+        return (requiredArguments == translatedArguments.size) || (argumentHandlers.size == translatedArguments.size)
     }
 }

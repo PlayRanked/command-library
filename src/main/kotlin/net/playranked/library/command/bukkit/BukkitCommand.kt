@@ -21,4 +21,8 @@ class BukkitCommand(root: String) : Command(root) {
         return true
     }
 
+    override fun tabComplete(sender: CommandSender, label: String, args: Array<String>): List<String> {
+        return CommandHandler.handleTabComplete(sender, label, args)
+    }
+
 }

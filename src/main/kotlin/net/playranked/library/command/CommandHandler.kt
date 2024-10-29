@@ -1,5 +1,6 @@
 package net.playranked.library.command
 
+import com.sun.jdi.IntegerType
 import net.playranked.library.command.builder.ArgumentBuilder
 import net.playranked.library.command.builder.CommandBuilder
 import net.playranked.library.command.bukkit.BukkitCommand
@@ -16,9 +17,19 @@ object CommandHandler {
     private val commandBuilders = mutableMapOf<BukkitCommand, MutableList<CommandBuilder>>()
     private val rootCommands = mutableMapOf<String, BukkitCommand>()
 
+    private val helpers = mutableMapOf<BukkitCommand, (CommandExecutor, List<CommandBuilder>) -> Unit>()
+    private var defaultHelper: ((CommandExecutor, List<CommandBuilder>) -> Unit) = { executor, list ->
+        executor.sender.sendMessage("You entered an invalid command.")
+        executor.sender.sendMessage("Did you mean: ")
+        list.forEach {
+            executor.sender.sendMessage("- ${it.baseCmd}")
+        }
+    }
+
     fun handleCommandInput(sender: CommandSender, label: String, args: Array<String>) {
         val executor = CommandExecutor(sender)
-        val highestProbability = getHighestProbability(executor, label, args)
+        val bukkitCommand = getBukkitCommand(label)
+        val highestProbability = getHighestProbability(executor, bukkitCommand, args)
 
         if (highestProbability.isEmpty()) {
             Bukkit.getLogger().log(Level.WARNING, "[Command Library] Missing command builder for '$label'.")
@@ -30,32 +41,19 @@ object CommandHandler {
             return
         }
 
-        sender.sendMessage("you had " + highestProbability.size + " matches : " + highestProbability[0].aliases[0] + " was your main one" )
-    }
-
-    private fun getHighestProbability(executor: CommandExecutor, label: String, args: Array<String>): List<CommandBuilder> {
-        val bukkitCommand = rootCommands[label.lowercase()]
-
-        if (bukkitCommand == null) {
-            Bukkit.getLogger().log(Level.WARNING, "[Command Library] Missing root command for '$label'.")
-            return emptyList()
-        }
-
-        return commandBuilders[bukkitCommand]!!.sortedByDescending { it.probability(executor, args) }
-    }
-
-    private fun executeCommand(executor: CommandExecutor, args: Array<String>, builder: CommandBuilder) {
-        if (builder.executor == null) {
-            Bukkit.getLogger().log(Level.WARNING, "[Command Library] '${builder.aliases[0]}' missing executor.")
+        val helper = helpers[bukkitCommand]
+        if (helper != null) {
+            helper.invoke(CommandExecutor(sender), highestProbability)
             return
         }
 
-        val execution = CommandExecution(builder, executor, args.toList())
-        if (builder.restrictions.any { !it.attemptExecution(execution) }) {
-            return
-        }
+        defaultHelper.invoke(CommandExecutor(sender), highestProbability)
+    }
 
-        builder.executor!!.invoke(execution)
+    fun handleTabComplete(sender: CommandSender, label: String, args: Array<String>): List<String> {
+        val executor = CommandExecutor(sender)
+        val highestProbability = getHighestProbability(executor, getBukkitCommand(label), args)
+        return highestProbability.map { it.arguments.entries.toList()[args.size - 1].value.tabComplete(executor, args[args.size - 1]) }.flatten()
     }
 
     fun registerBuilder(builder: CommandBuilder) {
@@ -73,6 +71,53 @@ object CommandHandler {
         builder.aliases.forEach {
             registerRoot(builder, it.lowercase())
         }
+    }
+
+    fun setDefaultHelper(helper: ((CommandExecutor, List<CommandBuilder>) -> Unit)) {
+        defaultHelper = helper
+    }
+
+    fun setHelper(name: String, helper: (CommandExecutor, List<CommandBuilder>) -> Unit) {
+        helpers[getBukkitCommand(name.lowercase())] = helper
+    }
+
+    private fun getHighestProbability(executor: CommandExecutor, bukkitCommand: BukkitCommand, args: Array<String>): List<CommandBuilder> {
+        val probabilities: List<Pair<Int, CommandBuilder>> = commandBuilders[bukkitCommand]!!.map {
+            Pair(it.probability(executor, args), it)
+        }.sortedByDescending { it.first }
+
+        val bestValue = probabilities[0].first
+        return probabilities.filter { it.first == bestValue }.map { it.second }.toList()
+    }
+
+    private fun executeCommand(executor: CommandExecutor, args: Array<String>, builder: CommandBuilder) {
+        if (builder.executor == null) {
+            Bukkit.getLogger().log(Level.WARNING, "[Command Library] '${builder.aliases[0]}' missing executor.")
+            return
+        }
+
+        val execution = CommandExecution(builder, executor, args.toList())
+
+        if (!execution.translated.validateArguments()) {
+            return
+        }
+
+        if (builder.restrictions.any { !it.attemptExecution(execution) }) {
+            return
+        }
+
+        builder.executor!!.invoke(execution)
+    }
+
+    private fun getBukkitCommand(label: String): BukkitCommand {
+        val cmd = rootCommands[label.lowercase()]
+
+        if (cmd == null) {
+            Bukkit.getLogger().log(Level.WARNING, "[Command Library] Missing root command for '$label'.")
+            return null!!
+        }
+
+        return cmd
     }
 
     private fun registerRoot(builder: CommandBuilder, root: String) {

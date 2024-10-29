@@ -29,6 +29,10 @@ class ArgumentBuilder<T> (val name: String, var parser: ArgumentParser<T>? = nul
         return this
     }
 
+    fun runValidation(executor: CommandExecutor, parsed: Any?): Boolean {
+        return validator == null || validator!!.invoke(executor, parsed as T)
+    }
+
     fun optional(): ArgumentBuilder<T> {
         optional = true
         return this
@@ -40,7 +44,7 @@ class ArgumentBuilder<T> (val name: String, var parser: ArgumentParser<T>? = nul
     }
 
     override fun matches(executor: CommandExecutor, provided: String): Boolean {
-        return parser!!.parse(provided, executor) != null
+        return parser!!.parseSafe(provided, executor) != null
     }
 
     override fun isOptional(): Boolean {
@@ -52,6 +56,10 @@ class ArgumentBuilder<T> (val name: String, var parser: ArgumentParser<T>? = nul
     }
 
     fun parse(executor: CommandExecutor, provided: String): T {
-        return parser!!.parse(provided, executor) as T
+        return parser!!.parseSafe(provided, executor) as T
+    }
+
+    override fun tabComplete(executor: CommandExecutor, provided: String): List<String> {
+        return parser!!.tabComplete(provided, executor)
     }
 }

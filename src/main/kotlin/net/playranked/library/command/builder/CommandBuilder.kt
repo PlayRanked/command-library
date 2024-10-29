@@ -10,7 +10,7 @@ import net.playranked.library.command.restrict.CommandRestrictor
 import org.bukkit.Bukkit
 import java.util.logging.Level
 
-class CommandBuilder(private var baseCmd: String) {
+class CommandBuilder(var baseCmd: String) {
 
     val aliases: MutableList<String> = mutableListOf()
     val arguments = mutableMapOf<String, ArgumentHandler>()
@@ -37,11 +37,11 @@ class CommandBuilder(private var baseCmd: String) {
             }
 
             if (optionalArg || requiredArg) {
-                val name = argument.substring(1, argument.length - 1)
+                var name = argument.substring(1, argument.length - 1)
                 val wildcard = name.endsWith("..")
 
                 if (wildcard) {
-                    name.substring(0, name.length - 2)
+                    name = name.substring(0, name.length - 2)
                 }
 
                 val argBuilder = ArgumentBuilder<Any>(name)
@@ -115,20 +115,8 @@ class CommandBuilder(private var baseCmd: String) {
     }
 
     fun probability(executor: CommandExecutor, args: Array<String>): Int {
-        var probability = 0
-
-        if (getArgumentList().size == args.size) {
-            probability += 1
-        }
-
-        if (getArgumentList()[getArgumentList().size - 1].isWildcard() && args.size > getArgumentList().size) {
-            probability += 1
-        }
-
         val translator = ArgumentTranslator(executor, args.toList(), arguments)
-        probability += translator.translatedArguments.size
-
-        return probability
+        return translator.translatedArguments.size
     }
 
     fun canExecute(executor: CommandExecutor, args: Array<String>): Boolean {
