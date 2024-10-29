@@ -1,0 +1,42 @@
+plugins {
+    id 'maven-publish'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
+    id 'com.gradleup.shadow' version '8.3.3'
+}
+
+group = "net.playranked.library"
+version = "1.0"
+
+kotlin {
+    jvmToolchain(19)
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) {
+            publication -> project.shadow.component(publication)
+        }
+    }
+
+    repositories {
+        maven {
+            url "https://nexus.playranked.net/repository/public-minecraft/"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+}
+
+dependencies {
+    compileOnly 'org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT'
+}
