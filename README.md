@@ -10,7 +10,7 @@ Maven
 <repositories>
   <repository>
     <id>playranked-public</id>
-    <url>https://nexus.playranked.net/repository/minecraft-public/</url>
+    <url>https://nexus.playranked.net/repository/public/</url>
   </repository>
 </repositories>
 
@@ -23,7 +23,7 @@ Maven
 Gradle
 ```groovy
 maven {
-    url = "https://nexus.playranked.net/repository/minecraft-public/"
+    url = "https://nexus.playranked.net/repository/public/"
 }
 
 implementation 'net.playranked.library:command-library:1.0'
