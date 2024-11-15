@@ -7,6 +7,7 @@ import net.playranked.library.command.argument.StaticArgument
 import net.playranked.library.command.argument.translate.ArgumentTranslator
 import net.playranked.library.command.executor.CommandExecutor
 import net.playranked.library.command.restrict.CommandRestrictor
+import net.playranked.library.command.restrict.impl.PermissionRestriction
 import org.bukkit.Bukkit
 import java.util.logging.Level
 
@@ -117,6 +118,11 @@ class CommandBuilder(var baseCmd: String) {
 
     fun probability(executor: CommandExecutor, args: Array<String>): Int {
         val translator = ArgumentTranslator(executor, args.toList(), arguments)
+
+        if (restrictions.any {  it is PermissionRestriction && !executor.sender.hasPermission(it.permission) }) {
+            return -1
+        }
+
         return translator.translatedArguments.size
     }
 

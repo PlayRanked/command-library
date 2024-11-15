@@ -32,7 +32,7 @@ object CommandHandler {
         val highestProbability = getHighestProbability(executor, bukkitCommand, args)
 
         if (highestProbability.isEmpty()) {
-            Bukkit.getLogger().log(Level.WARNING, "[Command Library] Missing command builder for '$label'.")
+            sender.sendMessage("You entered an invalid command.")
             return
         }
 
@@ -87,7 +87,7 @@ object CommandHandler {
         }.sortedByDescending { it.first }
 
         val bestValue = probabilities[0].first
-        return probabilities.filter { it.first == bestValue }.map { it.second }.toList()
+        return probabilities.filter { it.first == bestValue && it.first != -1 }.map { it.second }.toList()
     }
 
     private fun executeCommand(executor: CommandExecutor, args: Array<String>, builder: CommandBuilder) {
