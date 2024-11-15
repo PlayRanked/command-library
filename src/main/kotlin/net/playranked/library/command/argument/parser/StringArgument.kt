@@ -5,6 +5,6 @@ import net.playranked.library.command.executor.CommandExecutor
 
 object StringArgument : ArgumentParser<String>("N/A") {
     override fun parse(str: String, sender: CommandExecutor): String {
-        return str;
+        return str
     }
 }

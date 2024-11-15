@@ -8,7 +8,7 @@ import net.playranked.library.command.executor.CommandExecutor
 class ArgumentTranslator(val executor: CommandExecutor, playerArgs: List<String>, private val argumentHandlers: MutableMap<String, ArgumentHandler>) {
 
     val translatedArguments = HashMap<String, Any?>()
-    private val requiredArguments = argumentHandlers.filterNot { !it.value.isOptional() }.count()
+    private val requiredArguments = argumentHandlers.filter { !it.value.isOptional() }.count()
 
     init {
         val argumentList = argumentHandlers.entries.toList()
@@ -26,6 +26,10 @@ class ArgumentTranslator(val executor: CommandExecutor, playerArgs: List<String>
             val matches = handler.value.matches(executor, playerArg)
             if (!matches) {
                 if (!handler.value.isOptional()) {
+                    break
+                }
+
+                if (index >= argumentList.size) {
                     break
                 }
 
