@@ -45,8 +45,9 @@ class CommandBuilder(var baseCmd: String) {
                 }
 
                 val argBuilder = ArgumentBuilder<Any>(name)
-
-                argBuilder.optional()
+                if (optionalArg) {
+                    argBuilder.optional()
+                }
 
                 if (wildcard) {
                     argBuilder.wildcard()
