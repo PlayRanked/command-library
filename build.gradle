@@ -20,7 +20,7 @@ publishing {
 
     repositories {
         maven {
-            url "https://nexus.playranked.net/repository/minecraft-public/"
+            url "https://nexus.playranked.net/repository/public/"
             credentials {
                 username = System.getenv("MAVEN_USERNAME")
                 password = System.getenv("MAVEN_PASSWORD")
