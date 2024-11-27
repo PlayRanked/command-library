@@ -4,7 +4,7 @@ plugins {
     id 'com.gradleup.shadow' version '8.3.3'
 }
 
-group = "net.playranked.library"
+group = "dev.trinsic.library"
 version = "1.0"
 
 kotlin {
@@ -20,7 +20,7 @@ publishing {
 
     repositories {
         maven {
-            url "https://nexus.playranked.net/repository/public/"
+            url "https://repo.trinsic.dev/repository/minecraft-public/"
             credentials {
                 username = System.getenv("MAVEN_USERNAME")
                 password = System.getenv("MAVEN_PASSWORD")
